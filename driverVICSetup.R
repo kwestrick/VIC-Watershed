@@ -8,12 +8,18 @@ driverVICSetup <- function(watershedPourPointName = "STEHEKIN"){
   #
   options(stringsAsFactors = F)
   if (!require("pacman")) install.packages("pacman")
-  pacman::p_load(ncdf4,rgdal,raster,openxlsx)
+  pacman::p_load(ncdf4,rgdal,raster,openxlsx,ggmap,rgeos)
   source("/Volumes/MiniPro/Climatics/Code/Master/masterClimatics.R")
   source("/Volumes/MiniPro/Climatics/Code/Master/utilities.R")
-  
-  #,ggplot2,rgeos,tidyverse,rvest,devtools,git2r,ggmap,
+  source(paste0(climaticsOpDir,"Preprocessing/VIC-Watershed/createVICDomain.R"))
+  source(paste0(climaticsOpDir,"Preprocessing/VIC-Watershed/createVICForcing.R"))
+  source(paste0(climaticsOpDir,"Preprocessing/VIC-Watershed/createVICParameter.R"))
+  # ,ggplot2,rgeos,tidyverse,rvest,devtools,git2r,ggmap,
   #               ggrepel,git2r, openxlsx)
+  
+  thisDTG <- substr(as.character(gsub("-","",Sys.time())),1,8)
+  thisDTG <- "20190203"
+  thisFilename <- paste0(tolower(watershedPourPointName),".",thisDTG)
   
   ################
   #
@@ -98,8 +104,8 @@ driverVICSetup <- function(watershedPourPointName = "STEHEKIN"){
   myMap +
     geom_polygon(aes(x = long, y = lat), data = thisWatershedBdry,
                  colour = 'red', fill = 'transparent', alpha = .15, size = .3) +
-    geom_point(aes(x = LONGITUDE, y = LATITUDE, size=1), shape=23, 
-               fill = "green", color= "blue", data = plotPt) +
+    geom_point(aes(x = LONGITUDE, y = LATITUDE), shape=25, 
+               fill = "green", color= "blue", size = 4, data = plotPt) +
     theme(legend.position="bottom") + ggtitle("Forecast and Validation Points") +
     annotate("text",x = c1[,1], y = 37, label = 
                "Copyright 2018 Climatics Co - Not for Reproduction", 
@@ -108,9 +114,9 @@ driverVICSetup <- function(watershedPourPointName = "STEHEKIN"){
                "atop(italic('source code: createColumbiaFcstPoints.R'))", 
              colour = "black",size=4,parse = T)
   #### FOO ###
-  # just use the Stehekin right now
+  # just use the Stehekin test data right now
   #
-  #readStehekin <- function(){
+  readStehekin <- function(){
     stehekinDir <- "/Volumes/MiniPro/Climatics/Code/VIC"
     stehekinDomain <- paste0(stehekinDir,"/vic/drivers/image/parameters/domain.stehekin.20151028.nc")
     domainPtr <- nc_open(stehekinDomain)
@@ -130,18 +136,29 @@ driverVICSetup <- function(watershedPourPointName = "STEHEKIN"){
   #
   ################
   #
-  # Create the domain file for VIC
+  # Create the domain file for VIC, this includes making and resizing the raster mask
+  # and returning this raster, based on the 
+  #
+  ################
+  resolutionKm = 14.
+  vicGrid <- createVICDomain(vicBdry = thisWatershedBdry, resolutionKm = resolutionKm,
+                  thisFilename = thisFilename)
+  
+  ################
+  #
+  # Create the met forcing file for VIC
   #
   ################
   
+  createVICForcing(maskRaster = vicGrid, yr = "1980",
+                   thisFilename = thisFilename)
   
   ################
   #
   # Create the parameters file for VIC
   #
   ################
-  createVICParameter(maskRaster)
-  
-  # Create the forcing file for VIC
-  
+  createVICParameters(vicBdry = thisWatershedBdry,vicGrid = vicGrid, thisFilename = thisFilename,
+                      resolutionKm = resolutionKm)
+
 }

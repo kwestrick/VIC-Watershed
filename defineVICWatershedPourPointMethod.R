@@ -31,7 +31,7 @@ defineVICWatershedPourPointMethod <- function(inBoundaryPoly = 0, pourPointCoord
   projUtmString <- paste0("+proj=lcc +lat_1=",lat1," +lat_2=",lat2," +lon_0=",lon0," +ellps=WGS84")
   
   
-  # read in dem as a geotiff and reproject to utm square grid with 100 m resolution
+  # read in dem as a geotiff and reproject to utm square grid with 90 m resolution
   
   inFile <- paste0(climaticsDataDir,"Hydrosheds/mosaic_3s_NA_dem.raster")
   cropExtent <- extent(inBoundaryPoly)
