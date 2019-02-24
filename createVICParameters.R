@@ -439,7 +439,7 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
   var_trunk_ratio <- ncvar_def("trunk_ratio","fraction",list(dimLon,dimLat,dimVegClasses),missingValue,
                                prec = "double", longname = "Ratio of total tree height that is trunk (no branches). The default value has been 0.2.")
   var_albedo <- ncvar_def("albedo","fraction",list(dimLon,dimLat,dimMonth,dimVegClasses),missingValue,
-                          prec = "double",longname = "Shortwave albedo for vegetation type")
+                          prec  = "double",longname = "Shortwave albedo for vegetation type")
   var_veg_rough <- ncvar_def("veg_rough","m",list(dimLon,dimLat,dimMonth,dimVegClasses),missingValue,
                              prec = "double", longname = "Vegetation roughness length (typically 0.123 * vegetation height)")
   var_displacement <- ncvar_def("displacement","m",list(dimLon,dimLat,dimMonth,dimVegClasses),missingValue,
