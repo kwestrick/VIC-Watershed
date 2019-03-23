@@ -18,6 +18,8 @@ wrapperCreateVICForcingClassic <- function(yrStart = 0, yrEnd = 0,
   watershedFile <- list.files(dataDir,pattern = "watershed_shape_",full.names = T)
   thisWatershedBdry <- readRDS(watershedFile)
   yrs <- as.character(seq(yrStart,yrEnd,1))
+  plot(vicGrid)
+  plot(thisWatershedBdry,add=T)
   for(yr in yrs){
     createVICForcingClassic(vicGrid = vicGrid, 
                             yr = yr,
