@@ -7,9 +7,9 @@ createVICDomain <- function(vicBdry = 0,
   t1 <- cellsFromExtent(nativeMask, initialExtent, expand = T)
   initialExtentSnap <- extentFromCells(nativeMask,t1)
   origMask <- crop(mask(nativeMask, vicBdry),initialExtentSnap, snap = "out")
-  if (resolutionKm > 1 && resolutionKm %% 1 == 0) vicGrid <- aggregate(origMask,fact = resolutionKm)
   origMask[is.nan(origMask)] <- NA
-
+  if (resolutionKm > 1 && resolutionKm %% 1 == 0) vicGrid <- aggregate(origMask,fact = resolutionKm,expand=T)
+  vicGrid[is.nan(vicGrid)] <- NA
   plot(vicGrid,colNA="blue")
   plot(vicBdry, add=T)
   

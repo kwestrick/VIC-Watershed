@@ -1,6 +1,5 @@
 createVICDomainRVic <- function(vicBdry = 0, 
-                            resolutionKm = 4.,
-                            thisFilename = ""){
+                            resolutionKm = 4.){
   
   # define VIC grid
   nativeMask <- readRDS(file = paste0(climaticsDataDir,"RDS/VICNativeGridUSA.raster.rds"))
@@ -28,8 +27,8 @@ createVICDomainRVic <- function(vicBdry = 0,
   plot(vicBdry, add=T, border="grey40")
   
   # area
-  gridArea <- area(vicGrid) * 1e6
-  totalVicArea <- area(origMask) * 1e6
+  gridArea <- raster::area(vicGrid) * 1e6
+  totalVicArea <- raster::area(origMask) * 1e6
   vicArea <- aggregate(totalVicArea * origMask, fun= sum, fact = resolutionKm)
   vicArea[is.nan(vicArea)] <- NA
   totalVicArea <- aggregate(totalVicArea, fun= sum, fact = resolutionKm)

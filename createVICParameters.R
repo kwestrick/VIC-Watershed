@@ -9,9 +9,9 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
   
   pacman::p_load(ncdf4,raster)
   missingValue <- -999.99
-  myFlip <- function(s=0){
+  myFlip <- function(s=0, missVal = missingValue){
     tmp <- flip(t(s),direction='x')
-    tmp[is.na(tmp)] <- missingValue
+    tmp[is.na(tmp)] <- missVal
     return(tmp)
   }
   vicGrid <- readRDS("./stehekin14km.vicGrid.rds")
@@ -336,7 +336,7 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
   #
   ##########
   
-  processVeg <- F
+  processVeg <- T
   if(processVeg){
    infile <- paste(rdsDataDir,"globalLandCoverV2.westernHemisphere.RData",sep='')
     landCover <- get(load(file=infile))
@@ -389,9 +389,8 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
       residual <- 1 - sum(fraction)
       if(residual != 0) fraction[which.max(fraction)] <- fraction[which.max(fraction)] + residual # true up for fractions to equal one
       outTable <- matrix(c(seq(1,20),rep(NA,20)),nc=2,byrow=F)
-      outTable[,2] <- NA
+      ##outTable[,2] <- NA
       thisTable <- cbind(counts$x,fraction)
-      outTable[match(thisTable[,1], outTable[,1]),2]
       outTable[match(thisTable[,1],outTable[,1]),2] <- thisTable[,2]
       return(outTable[,2])
     }
@@ -474,11 +473,11 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
     xyMap <- paste(coordinates(vicGrid)[,1],coordinates(vicGrid)[,2],sep = "_") 
     indices <- match(xyMap,colnames(vegFracMatrix))
     indices <- indices[!is.na(indices)]
-    xyz$z[indices] <- colSums(is.na(vegFracMatrix))
+    xyz$z[indices] <- colSums(!is.na(vegFracMatrix))
     nVegRaster <-rasterFromXYZ(xyz)
-    outMatrix <- as.matrix(myFlip(nVegRaster))
+    outMatrix <- as.matrix(myFlip(nVegRaster,missVal = -999))
     ncvar_put(ncid_old,"Nveg",outMatrix)
-    
+ 
     # Cv: Fraction of grid cell covered by vegetation tile
     ncid_old <- ncvar_add(ncid_old,var_Cv)
     vicCoords <- coordinates(vicGrid)
@@ -486,14 +485,13 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
     xyMap <- paste(coordinates(vicGrid)[,1],coordinates(vicGrid)[,2],sep = "_") 
     indices <- match(xyMap,colnames(vegFracMatrix))
     indices <- indices[!is.na(indices)]
-    xyz[indices,3:dim(xyz)[2]] <- vegFracMatrix
-    cvBrick <-rasterFromXYZ(xyz)
+    vegFracMatrix[is.na(vegFracMatrix)] <- 0
+    xyz[indices,3:dim(xyz)[2]] <- t(vegFracMatrix)
+    cvBrick <-rasterFromXYZ(xyz) 
     outArray <- as.array(myFlip(cvBrick))
-    outArray[outArray == missingValue] <- 0
-    outArray <- outArray * vicGrid
     ncvar_put(ncid_old,"Cv",outArray)
-    
-    # root_depth
+
+    # root_depth(veg_class, root_zone, lat, lon)
     ncid_old <- ncvar_add(ncid_old,var_root_depth)
     maskVector <- getValues(vicGrid)
     vicCoords <- coordinates(vicGrid)
@@ -509,7 +507,7 @@ createVICParameters <- function(vicBdry = 0, vicGrid = 0, thisFilename = "Test",
     outArray <- as.array(myFlip(outBrick))
     ncvar_put(ncid_old,"root_depth",outArray)
    
-    # root_fract
+    # root_fract (veg_class, root_zone, lat, lon)
     ncid_old <- ncvar_add(ncid_old,var_root_fract)
     outBrick <- do.call(addLayer, lapply(1:20, function(idx){
       rootDepth1 <- combinedVegTable$root_fract_rz1[glcRemapTable$remap][idx]
