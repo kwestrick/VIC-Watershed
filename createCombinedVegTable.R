@@ -25,35 +25,34 @@ createCombinedVegTable <- function(){
                                    rows = indices)[,1:2]
     inTable$X1 <- substring(inTable$X1,4)
     inTable$X1 <- gsub("^\\s+|\\s+$", "", inTable$X1)
-    inTable$X2[inTable$X2 == "N/A"] <- NA
-    inTable$X2[inTable$X2 == "NONE"] <- NA
+    inTable$X2[inTable$X2 == "N/A"] <- -99
+    inTable$X2[inTable$X2 == "NONE"] <- -99
     colnames(inTable) <- c("vegParam",colName)
     return(inTable)
   }
   # Canopy Top Meters
-  vegTable <- createTables(c(7:20),"canopyTopM")[,2]
+  vegTable <- matrix(as.numeric(createTables(c(7:20),"canopyTopM")[,2]),nc=1)
+  colnames(vegTable) <- "canopyTopM"
   
   # Roughness Length 
-  vegTable <- cbind(vegTable, roughnessLengthM = createTables(c(45:58),"roughnessLengthM")[,2])
-
+  #vegTable <- cbind(vegTable, roughnessLengthM = as.numeric(createTables(c(45:58),"roughnessLengthM")[,2]))
+  vegTable <- cbind(vegTable, roughnessLengthM = 0.123 * vegTable[,"canopyTopM"])
   # overstory 
-  vegTable <- cbind(vegTable, overstory = createTables(c(501:514),"overstory")[,2])
-  
-  # displacement 
-  vegTable <- cbind(vegTable, displacement = createTables(c(387:400),"displacement")[,2])
+  vegTable <- cbind(vegTable, overstory = as.numeric(createTables(c(501:514),"overstory")[,2]))
   
   # albedo 
-  vegTable <- cbind(vegTable, albedo = createTables(c(463:476),"albedo")[,2])
+  vegTable <- cbind(vegTable, albedo = as.numeric(createTables(c(463:476),"albedo")[,2]))
   
   # displacement 
-  vegTable <- cbind(vegTable, displacement = createTables(c(387:400),"displacement")[,2])
+  #vegTable <- cbind(vegTable, displacement = as.numeric(createTables(c(387:400),"displacement")[,2]))
+  vegTable <- cbind(vegTable, displacement = 0.67 * vegTable[,"canopyTopM"])
   
   # LAI max (summer)
-  vegTable <- cbind(vegTable, LAImax = createTables(c(311:324),"LAImax")[,2])
+  vegTable <- cbind(vegTable, LAImax = as.numeric(createTables(c(311:324),"LAImax")[,2]))
   
   # LAI min (winter)
   vegTable <- cbind(vegTable, LAImin = createTables(c(330:343),"LAImin")[,2])
-  
+
   # For other parameters use the table provided by Diana Gergel at the UW Computational Hydrology (7 Feb 2019)
   
   uwTable <- openxlsx::read.xlsx(paste0(climaticsCodeDir,'Master/vegParametersFromUWGergel.xlsx'))
@@ -69,9 +68,10 @@ createCombinedVegTable <- function(){
   glcTable
   
   #  glcTable values: 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-  glcTable$remap <- c(2,4,1,3,5,7,8,7,9,9, 11,12,11,12,12,12,12,12,12,12)
+  glcTable$remap <- c(2,4,1,3,5,7,8,7,9,9,11,10,11,10,10,10,10,10,10,10)
   
   glcTable$glcMapsTo <- combinedVegTable$vegDescription[glcTable$remap]
 
   write.csv(glcTable,file=paste0(climaticsCodeDir,'Master/glcRemapTable.csv'))
 }
+createCombinedVegTable()
